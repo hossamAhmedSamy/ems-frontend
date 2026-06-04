@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Plus, Search } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { SelectField } from '../components/ui/Select';
-import { PageHeader } from '../components/PageHeader';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { Input } from '../../components/ui/Input';
+import { SelectField } from '../../components/ui/Select';
+import { PageHeader } from '../../components/PageHeader';
 import {
   CompanyStatusBadge,
   SubscriptionStatusBadge,
   SubscriptionTierBadge,
-} from '../components/StatusBadges';
-import { useCompanies } from '../hooks/useCompanies';
+} from '../../components/StatusBadges';
+import { useCompanies } from '../../hooks/useCompanies';
 import { CreateCompanyModal } from './CreateCompanyModal';
-import { formatDateTime } from '../lib/utils';
-import type { CompanyStatus, SubscriptionTier } from '../lib/types';
+import { formatDateTime } from '../../lib/utils';
+import type { CompanyStatus, SubscriptionTier } from '../../lib/types';
 
 export default function CompaniesPage() {
   const [page, setPage] = useState(1);
@@ -113,7 +113,7 @@ export default function CompaniesPage() {
                     className="hover:bg-surface-alt transition cursor-pointer"
                   >
                     <td className="px-4 py-3">
-                      <Link to={`/companies/${item.company.id}`} className="block">
+                      <Link to={`/super-admin/companies/${item.company.id}`} className="block">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-md bg-brand-50 text-brand-700 flex items-center justify-center flex-shrink-0">
                             <Building2 className="h-4 w-4" />

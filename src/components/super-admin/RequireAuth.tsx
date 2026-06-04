@@ -1,9 +1,9 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useMe } from '../hooks/useAuth';
+import { useSuperMe } from '../../hooks/useSuperAuth';
 import { Loader2 } from 'lucide-react';
 
-export function RequireAuth() {
-  const me = useMe();
+export function RequireSuperAuth() {
+  const me = useSuperMe();
   const location = useLocation();
 
   if (me.isLoading) {
@@ -14,7 +14,7 @@ export function RequireAuth() {
     );
   }
   if (!me.data?.superAdmin) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/super-admin/login" replace state={{ from: location }} />;
   }
   return <Outlet />;
 }

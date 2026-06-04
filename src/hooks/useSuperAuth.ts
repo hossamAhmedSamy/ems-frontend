@@ -6,7 +6,7 @@ interface MeResponse {
   superAdmin: SuperAdmin;
 }
 
-export function useMe() {
+export function useSuperMe() {
   return useQuery({
     queryKey: ['super-admin', 'me'],
     queryFn: async () => {
@@ -21,7 +21,7 @@ export function useMe() {
   });
 }
 
-export function useLogin() {
+export function useSuperLogin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { username: string; password: string }) =>
@@ -32,7 +32,7 @@ export function useLogin() {
   });
 }
 
-export function useLogout() {
+export function useSuperLogout() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.post<{ ok: boolean }>('/super-admin/logout'),

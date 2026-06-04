@@ -2,14 +2,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { Modal } from '../components/ui/Dialog';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
-import { SelectField } from '../components/ui/Select';
-import { useCreateCompany } from '../hooks/useCompanies';
-import { ApiError } from '../lib/api';
-import type { SubscriptionTier } from '../lib/types';
+import { Modal } from '../../components/ui/Dialog';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Label } from '../../components/ui/Label';
+import { SelectField } from '../../components/ui/Select';
+import { useCreateCompany } from '../../hooks/useCompanies';
+import { ApiError } from '../../lib/api';
+import type { SubscriptionTier } from '../../lib/types';
 
 const schema = z.object({
   name: z.string().min(1, 'Required').max(200),
@@ -65,7 +65,7 @@ export function CreateCompanyModal({ open, onOpenChange }: Props) {
       });
       reset();
       onOpenChange(false);
-      navigate(`/companies/${res.companyId}`);
+      navigate(`/super-admin/companies/${res.companyId}`);
     } catch (err) {
       if (err instanceof ApiError) {
         setError('root', { message: err.message });

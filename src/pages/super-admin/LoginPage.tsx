@@ -1,12 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
-import { useLogin, useMe } from '../hooks/useAuth';
-import { ApiError } from '../lib/api';
+import { Button } from '../../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Input } from '../../components/ui/Input';
+import { Label } from '../../components/ui/Label';
+import { useSuperLogin, useSuperMe } from '../../hooks/useSuperAuth';
+import { ApiError } from '../../lib/api';
 import { useEffect } from 'react';
 
 interface FormValues {
@@ -14,20 +14,20 @@ interface FormValues {
   password: string;
 }
 
-export default function LoginPage() {
+export default function SuperAdminLoginPage() {
   const navigate = useNavigate();
-  const me = useMe();
-  const login = useLogin();
+  const me = useSuperMe();
+  const login = useSuperLogin();
   const { register, handleSubmit, formState: { errors }, setError } = useForm<FormValues>();
 
   useEffect(() => {
-    if (me.data?.superAdmin) navigate('/', { replace: true });
+    if (me.data?.superAdmin) navigate('/super-admin', { replace: true });
   }, [me.data, navigate]);
 
   const onSubmit = handleSubmit(async (values) => {
     try {
       await login.mutateAsync(values);
-      navigate('/', { replace: true });
+      navigate('/super-admin', { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
         setError('root', { message: err.message });

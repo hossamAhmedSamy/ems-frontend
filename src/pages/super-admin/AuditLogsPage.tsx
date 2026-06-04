@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { Badge } from '../components/ui/Badge';
-import { PageHeader } from '../components/PageHeader';
-import { useAuditLogs } from '../hooks/useAuditLogs';
-import { formatDateTime } from '../lib/utils';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { Input } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
+import { PageHeader } from '../../components/PageHeader';
+import { useAuditLogs } from '../../hooks/useAuditLogs';
+import { formatDateTime } from '../../lib/utils';
 
 export default function AuditLogsPage() {
   const [params, setParams] = useSearchParams();

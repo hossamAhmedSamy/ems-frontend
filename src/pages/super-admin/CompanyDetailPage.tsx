@@ -11,22 +11,22 @@ import {
   Power,
   Users,
 } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { SelectField } from '../components/ui/Select';
-import { PageHeader } from '../components/PageHeader';
+import { Button } from '../../components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { SelectField } from '../../components/ui/Select';
+import { PageHeader } from '../../components/PageHeader';
 import {
   CompanyStatusBadge,
   SubscriptionStatusBadge,
   SubscriptionTierBadge,
-} from '../components/StatusBadges';
+} from '../../components/StatusBadges';
 import {
   useCompany,
   useUpdateCompanyStatus,
   useUpdateSubscription,
-} from '../hooks/useCompanies';
-import { formatDateTime } from '../lib/utils';
-import type { CompanyStatus, SubscriptionTier } from '../lib/types';
+} from '../../hooks/useCompanies';
+import { formatDateTime } from '../../lib/utils';
+import type { CompanyStatus, SubscriptionTier } from '../../lib/types';
 
 const STATUS_LABEL: Record<CompanyStatus, string> = {
   Active: 'Active',
@@ -51,7 +51,7 @@ export default function CompanyDetailPage() {
     return (
       <CenterMessage>
         Couldn't load this company.{' '}
-        <Link to="/companies" className="text-brand-700 underline">
+        <Link to="/super-admin/companies" className="text-brand-700 underline">
           Back
         </Link>
       </CenterMessage>
@@ -77,7 +77,7 @@ export default function CompanyDetailPage() {
           <span className="font-mono text-xs text-slate-500">@{data.company.slug}</span>
         }
         actions={
-          <Button variant="secondary" onClick={() => navigate('/companies')}>
+          <Button variant="secondary" onClick={() => navigate('/super-admin/companies')}>
             <ArrowLeft className="h-4 w-4" />
             All companies
           </Button>
@@ -292,7 +292,7 @@ export default function CompanyDetailPage() {
             </CardHeader>
             <CardContent>
               <Link
-                to={`/audit?companyId=${data.company.id}`}
+                to={`/super-admin/audit?companyId=${data.company.id}`}
                 className="text-sm text-brand-700 underline"
               >
                 View audit log for this tenant →

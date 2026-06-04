@@ -6,12 +6,12 @@ import {
   ShieldAlert,
   TrendingUp,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { useCompanies } from '../hooks/useCompanies';
-import { useAuditLogs } from '../hooks/useAuditLogs';
-import { CompanyStatusBadge, SubscriptionTierBadge } from '../components/StatusBadges';
-import { relativeTime } from '../lib/utils';
-import { PageHeader } from '../components/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { useCompanies } from '../../hooks/useCompanies';
+import { useAuditLogs } from '../../hooks/useAuditLogs';
+import { CompanyStatusBadge, SubscriptionTierBadge } from '../../components/StatusBadges';
+import { relativeTime } from '../../lib/utils';
+import { PageHeader } from '../../components/PageHeader';
 
 export default function DashboardPage() {
   const companies = useCompanies({ pageSize: 200 });
@@ -69,7 +69,7 @@ export default function DashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Recent companies</CardTitle>
               <Link
-                to="/companies"
+                to="/super-admin/companies"
                 className="text-xs text-brand-700 hover:underline inline-flex items-center gap-1"
               >
                 See all <ArrowUpRight className="h-3 w-3" />
@@ -81,7 +81,7 @@ export default function DashboardPage() {
                   <li key={i.company.id} className="px-5 py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <Link
-                        to={`/companies/${i.company.id}`}
+                        to={`/super-admin/companies/${i.company.id}`}
                         className="font-medium text-slate-900 hover:text-brand-700 truncate block"
                       >
                         {i.company.name}
@@ -109,7 +109,7 @@ export default function DashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Latest activity</CardTitle>
               <Link
-                to="/audit"
+                to="/super-admin/audit"
                 className="text-xs text-brand-700 hover:underline inline-flex items-center gap-1"
               >
                 Full log <ArrowUpRight className="h-3 w-3" />

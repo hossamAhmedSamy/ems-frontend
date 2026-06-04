@@ -9,9 +9,9 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
-import { Button } from './ui/Button';
-import { useLogout, useMe } from '../hooks/useAuth';
-import { cn } from '../lib/utils';
+import { Button } from '../ui/Button';
+import { useSuperLogout, useSuperMe } from '../../hooks/useSuperAuth';
+import { cn } from '../../lib/utils';
 
 interface NavItem {
   to: string;
@@ -20,14 +20,14 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-  { to: '/companies', label: 'Companies', icon: <Building2 className="h-4 w-4" /> },
-  { to: '/audit', label: 'Audit logs', icon: <ScrollText className="h-4 w-4" /> },
+  { to: '/super-admin', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
+  { to: '/super-admin/companies', label: 'Companies', icon: <Building2 className="h-4 w-4" /> },
+  { to: '/super-admin/audit', label: 'Audit logs', icon: <ScrollText className="h-4 w-4" /> },
 ];
 
-export function SidebarLayout() {
-  const me = useMe();
-  const logout = useLogout();
+export function SuperAdminLayout() {
+  const me = useSuperMe();
+  const logout = useSuperLogout();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -35,7 +35,7 @@ export function SidebarLayout() {
     try {
       await logout.mutateAsync();
     } finally {
-      navigate('/login', { replace: true });
+      navigate('/super-admin/login', { replace: true });
     }
   };
 
@@ -76,7 +76,7 @@ export function SidebarLayout() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === '/super-admin'}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 cn(
