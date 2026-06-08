@@ -21,6 +21,8 @@ import {
 } from '../../hooks/useTenantBranches';
 import type { Region } from '../../lib/types';
 import { ApiError } from '../../lib/api';
+import { useTenantMe } from '../../hooks/useTenantAuth';
+import { hasPermission } from '../../lib/permissions';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Required').max(200),
@@ -33,6 +35,9 @@ type FormValues = z.infer<typeof schema>;
 
 export default function RegionsPage() {
   const regions = useRegions();
+  const me = useTenantMe();
+  const role = me.data?.user?.role;
+  const canManage = role ? hasPermission(role, 'regions:manage') : false;
   const [editing, setEditing] = useState<Region | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Region | null>(null);
   const deleteRegion = useDeleteRegion();
@@ -43,10 +48,12 @@ export default function RegionsPage() {
         title="Regions"
         description="Group branches by region. Optional but useful for reporting."
         actions={
-          <Button onClick={() => setEditing('new')}>
-            <Plus className="h-4 w-4" />
-            New region
-          </Button>
+          canManage ? (
+            <Button onClick={() => setEditing('new')}>
+              <Plus className="h-4 w-4" />
+              New region
+            </Button>
+          ) : undefined
         }
       />
       <div className="px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
@@ -57,11 +64,17 @@ export default function RegionsPage() {
             <EmptyState
               icon={<Map className="h-5 w-5" />}
               title="No regions yet"
-              description="Create regions to group branches geographically."
+              description={
+                canManage
+                  ? 'Create regions to group branches geographically.'
+                  : 'No regions set up. Ask your Admin to add the first one.'
+              }
               action={
-                <Button onClick={() => setEditing('new')}>
-                  <Plus className="h-4 w-4" /> Add region
-                </Button>
+                canManage ? (
+                  <Button onClick={() => setEditing('new')}>
+                    <Plus className="h-4 w-4" /> Add region
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
@@ -93,24 +106,26 @@ export default function RegionsPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditing(r)}
-                            aria-label="Edit region"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleting(r)}
-                            aria-label="Delete region"
-                          >
-                            <Trash2 className="h-4 w-4 text-rose-600" />
-                          </Button>
-                        </div>
+                        {canManage && (
+                          <div className="flex items-center gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditing(r)}
+                              aria-label="Edit region"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleting(r)}
+                              aria-label="Delete region"
+                            >
+                              <Trash2 className="h-4 w-4 text-rose-600" />
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

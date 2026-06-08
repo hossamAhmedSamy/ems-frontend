@@ -83,6 +83,18 @@ export function useUpdateCompanyStatus(id: string) {
   });
 }
 
+export function useResetTenantUserPassword(companyId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { userId: string; newPassword: string }) =>
+      api.post<{ ok: boolean }>(
+        `/super-admin/companies/${companyId}/users/${input.userId}/reset-password`,
+        { newPassword: input.newPassword },
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['super-admin', 'company', companyId] }),
+  });
+}
+
 export function useUpdateSubscription(id: string) {
   const qc = useQueryClient();
   return useMutation({

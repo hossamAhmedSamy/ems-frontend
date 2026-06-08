@@ -4,7 +4,7 @@ import { cn } from '../../lib/utils';
 import { Loader2 } from 'lucide-react';
 
 const buttonStyles = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition focus-visible:focus-ring disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -34,10 +34,17 @@ export interface ButtonProps
   loading?: boolean;
 }
 
+// Defaulting `type="button"` is the important bit: a <button> with no type
+// attribute defaults to type="submit" in HTML. Inside a Modal form (Branches,
+// Users, etc.) any click on an icon button — say the row-level Edit pencil —
+// would actually try to submit the surrounding form. That's the silent reason
+// edit/delete row buttons appeared dead: they were submitting the modal form
+// while the modal was already closed, doing nothing visible.
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, disabled, ...props }, ref) => (
+  ({ className, variant, size, loading, children, disabled, type, ...props }, ref) => (
     <button
       ref={ref}
+      type={type ?? 'button'}
       className={cn(buttonStyles({ variant, size }), className)}
       disabled={disabled || loading}
       {...props}

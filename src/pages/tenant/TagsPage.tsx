@@ -20,6 +20,8 @@ import {
   type Tag,
   type TagInput,
 } from '../../hooks/useTenantCategories';
+import { useTenantMe } from '../../hooks/useTenantAuth';
+import { hasPermission } from '../../lib/permissions';
 import { ApiError } from '../../lib/api';
 
 const HEX_RX = /^#[0-9a-fA-F]{6}$/;
@@ -36,6 +38,9 @@ type FormValues = z.infer<typeof schema>;
 
 export default function TagsPage() {
   const tags = useTags();
+  const me = useTenantMe();
+  const role = me.data?.user?.role;
+  const canManage = role ? hasPermission(role, 'tags:manage') : false;
   const [editing, setEditing] = useState<Tag | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Tag | null>(null);
   const deleteTag = useDeleteTag();
@@ -46,9 +51,11 @@ export default function TagsPage() {
         title="Tags"
         description="Reusable labels you can attach to expenses or promotions."
         actions={
-          <Button onClick={() => setEditing('new')}>
-            <Plus className="h-4 w-4" /> New tag
-          </Button>
+          canManage ? (
+            <Button onClick={() => setEditing('new')}>
+              <Plus className="h-4 w-4" /> New tag
+            </Button>
+          ) : undefined
         }
       />
       <div className="px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
@@ -59,11 +66,17 @@ export default function TagsPage() {
             <EmptyState
               icon={<TagIcon className="h-5 w-5" />}
               title="No tags yet"
-              description="Use tags to mark expenses for ad-hoc grouping (e.g. 'reimbursable', 'project-X')."
+              description={
+                canManage
+                  ? "Use tags to mark expenses for ad-hoc grouping (e.g. 'reimbursable', 'project-X')."
+                  : 'No tags set up. Ask your Admin to add the first one.'
+              }
               action={
-                <Button onClick={() => setEditing('new')}>
-                  <Plus className="h-4 w-4" /> Add tag
-                </Button>
+                canManage ? (
+                  <Button onClick={() => setEditing('new')}>
+                    <Plus className="h-4 w-4" /> Add tag
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
@@ -84,22 +97,26 @@ export default function TagsPage() {
                     <Badge tone={t.isActive ? 'success' : 'neutral'}>
                       {t.isActive ? 'Active' : 'Inactive'}
                     </Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditing(t)}
-                      aria-label="Edit tag"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleting(t)}
-                      aria-label="Delete tag"
-                    >
-                      <Trash2 className="h-4 w-4 text-rose-600" />
-                    </Button>
+                    {canManage && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditing(t)}
+                          aria-label="Edit tag"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleting(t)}
+                          aria-label="Delete tag"
+                        >
+                          <Trash2 className="h-4 w-4 text-rose-600" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </li>
               ))}
@@ -149,12 +166,20 @@ function TagFormModal({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     values: tag ? { name: tag.name, color: tag.color ?? '' } : { name: '', color: '#4F46E5' },
   });
+
+  // Controlled color: two inputs (picker + text) bound to ONE source of truth
+  // via watch/setValue. The previous code registered both inputs to the same
+  // field via {...register('color')} — react-hook-form sees the last one's
+  // value, so the picker's onChange was effectively ignored.
+  const color = watch('color') ?? '';
 
   const onSubmit = handleSubmit(async (v) => {
     const input: TagInput = { name: v.name, color: v.color || null };
@@ -199,8 +224,18 @@ function TagFormModal({
         <div className="space-y-1.5">
           <Label>Color</Label>
           <div className="flex items-center gap-2">
-            <Input type="color" className="w-14 h-10 p-1" {...register('color')} />
-            <Input {...register('color')} placeholder="#4F46E5" className="font-mono" />
+            <Input
+              type="color"
+              className="w-14 h-10 p-1"
+              value={color || '#4F46E5'}
+              onChange={(e) => setValue('color', e.target.value, { shouldDirty: true })}
+            />
+            <Input
+              value={color}
+              onChange={(e) => setValue('color', e.target.value, { shouldDirty: true })}
+              placeholder="#4F46E5"
+              className="font-mono"
+            />
           </div>
           {errors.color && <p className="text-xs text-rose-600">{errors.color.message}</p>}
         </div>

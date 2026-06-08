@@ -6,6 +6,7 @@ import {
   Calendar,
   CheckCircle2,
   CircleSlash,
+  KeyRound,
   PauseCircle,
   PlayCircle,
   Power,
@@ -14,6 +15,8 @@ import {
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { SelectField } from '../../components/ui/Select';
+import { Modal } from '../../components/ui/Dialog';
+import { Input } from '../../components/ui/Input';
 import { PageHeader } from '../../components/PageHeader';
 import {
   CompanyStatusBadge,
@@ -22,11 +25,17 @@ import {
 } from '../../components/StatusBadges';
 import {
   useCompany,
+  useResetTenantUserPassword,
   useUpdateCompanyStatus,
   useUpdateSubscription,
 } from '../../hooks/useCompanies';
 import { formatDateTime } from '../../lib/utils';
-import type { CompanyStatus, SubscriptionTier } from '../../lib/types';
+import { ApiError } from '../../lib/api';
+import type {
+  CompanyStatus,
+  SubscriptionTier,
+  TenantUser,
+} from '../../lib/types';
 
 const STATUS_LABEL: Record<CompanyStatus, string> = {
   Active: 'Active',
@@ -42,6 +51,7 @@ export default function CompanyDetailPage() {
   const updateSub = useUpdateSubscription(id ?? '');
 
   const [pendingStatus, setPendingStatus] = useState<CompanyStatus | null>(null);
+  const [resettingUser, setResettingUser] = useState<TenantUser | null>(null);
 
   if (!id) return null;
   if (company.isLoading) {
@@ -236,6 +246,16 @@ export default function CompanyDetailPage() {
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
                           {u.role}
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => setResettingUser(u)}
+                          title="Reset this user's password"
+                        >
+                          <KeyRound className="h-3 w-3" />
+                          Reset
+                        </Button>
                         {u.isActive ? (
                           <span className="inline-flex items-center gap-1 text-emerald-700">
                             <CheckCircle2 className="h-3 w-3" />
@@ -301,7 +321,92 @@ export default function CompanyDetailPage() {
           </Card>
         </div>
       </div>
+
+      <ResetTenantUserPasswordModal
+        companyId={data.company.id}
+        user={resettingUser}
+        onClose={() => setResettingUser(null)}
+      />
     </div>
+  );
+}
+
+function ResetTenantUserPasswordModal({
+  companyId,
+  user,
+  onClose,
+}: {
+  companyId: string;
+  user: TenantUser | null;
+  onClose: () => void;
+}) {
+  const reset = useResetTenantUserPassword(companyId);
+  const [newPassword, setNewPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClose = () => {
+    setNewPassword('');
+    setError(null);
+    onClose();
+  };
+
+  const handleConfirm = async () => {
+    if (newPassword.length < 8) {
+      setError('Min 8 characters');
+      return;
+    }
+    try {
+      await reset.mutateAsync({ userId: user!.id, newPassword });
+      handleClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Network error');
+    }
+  };
+
+  return (
+    <Modal
+      open={!!user}
+      onOpenChange={(o) => {
+        if (!o) handleClose();
+      }}
+      title={user ? `Reset password for ${user.fullName}` : 'Reset password'}
+      description="They'll be signed out everywhere and must change the password on next sign-in. Communicate the new password to them securely."
+      size="sm"
+      footer={
+        <>
+          <Button variant="secondary" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} loading={reset.isPending}>
+            Reset password
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <div className="text-xs text-slate-500 -mt-2">
+          For @{user?.username} ({user?.role})
+        </div>
+        <div className="space-y-1.5">
+          <Label small>New password</Label>
+          <Input
+            type="text"
+            autoFocus
+            value={newPassword}
+            onChange={(e) => {
+              setNewPassword(e.target.value);
+              if (error) setError(null);
+            }}
+            placeholder="At least 8 characters"
+          />
+        </div>
+        {error && (
+          <div className="rounded-md bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 }
 

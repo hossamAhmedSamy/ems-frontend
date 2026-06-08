@@ -20,6 +20,8 @@ import {
   type CategoryInput,
   type ExpenseCategory,
 } from '../../hooks/useTenantCategories';
+import { useTenantMe } from '../../hooks/useTenantAuth';
+import { hasPermission } from '../../lib/permissions';
 import { ApiError } from '../../lib/api';
 
 const schema = z.object({
@@ -32,6 +34,9 @@ type FormValues = z.infer<typeof schema>;
 
 export default function CategoriesPage() {
   const cats = useCategories();
+  const me = useTenantMe();
+  const role = me.data?.user?.role;
+  const canManage = role ? hasPermission(role, 'expense-categories:manage') : false;
   const [editing, setEditing] = useState<ExpenseCategory | 'new' | null>(null);
   const [deleting, setDeleting] = useState<ExpenseCategory | null>(null);
   const deleteCat = useDeleteCategory();
@@ -40,12 +45,18 @@ export default function CategoriesPage() {
     <div>
       <PageHeader
         title="Expense categories"
-        description="Categories you can use when recording expenses (e.g. Utilities, Rent, Supplies)."
+        description={
+          canManage
+            ? 'Categories you can use when recording expenses (e.g. Utilities, Rent, Supplies).'
+            : 'Categories available for expense entry. Ask your Admin to add new ones.'
+        }
         actions={
-          <Button onClick={() => setEditing('new')}>
-            <Plus className="h-4 w-4" />
-            New category
-          </Button>
+          canManage ? (
+            <Button onClick={() => setEditing('new')}>
+              <Plus className="h-4 w-4" />
+              New category
+            </Button>
+          ) : undefined
         }
       />
       <div className="px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
@@ -56,11 +67,17 @@ export default function CategoriesPage() {
             <EmptyState
               icon={<FolderTree className="h-5 w-5" />}
               title="No categories yet"
-              description="Categories let you group expenses for reports and budgeting."
+              description={
+                canManage
+                  ? 'Categories let you group expenses for reports and budgeting.'
+                  : 'No categories have been set up. Ask your Admin to add them.'
+              }
               action={
-                <Button onClick={() => setEditing('new')}>
-                  <Plus className="h-4 w-4" /> Add category
-                </Button>
+                canManage ? (
+                  <Button onClick={() => setEditing('new')}>
+                    <Plus className="h-4 w-4" /> Add category
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
@@ -87,24 +104,26 @@ export default function CategoriesPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditing(c)}
-                            aria-label="Edit category"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleting(c)}
-                            aria-label="Delete category"
-                          >
-                            <Trash2 className="h-4 w-4 text-rose-600" />
-                          </Button>
-                        </div>
+                        {canManage && (
+                          <div className="flex items-center gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditing(c)}
+                              aria-label="Edit category"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleting(c)}
+                              aria-label="Delete category"
+                            >
+                              <Trash2 className="h-4 w-4 text-rose-600" />
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

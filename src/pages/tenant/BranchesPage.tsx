@@ -23,6 +23,8 @@ import {
 } from '../../hooks/useTenantBranches';
 import type { Branch } from '../../lib/types';
 import { ApiError } from '../../lib/api';
+import { useTenantMe } from '../../hooks/useTenantAuth';
+import { hasPermission } from '../../lib/permissions';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Required').max(200),
@@ -35,6 +37,9 @@ type FormValues = z.infer<typeof schema>;
 export default function BranchesPage() {
   const branches = useBranches();
   const regions = useRegions();
+  const me = useTenantMe();
+  const role = me.data?.user?.role;
+  const canManage = role ? hasPermission(role, 'branches:manage') : false;
   const [editing, setEditing] = useState<Branch | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Branch | null>(null);
   const deleteBranch = useDeleteBranch();
@@ -47,10 +52,12 @@ export default function BranchesPage() {
         title="Branches"
         description="Locations where your company records expenses."
         actions={
-          <Button onClick={() => setEditing('new')}>
-            <Plus className="h-4 w-4" />
-            New branch
-          </Button>
+          canManage ? (
+            <Button onClick={() => setEditing('new')}>
+              <Plus className="h-4 w-4" />
+              New branch
+            </Button>
+          ) : undefined
         }
       />
       <div className="px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
@@ -61,11 +68,17 @@ export default function BranchesPage() {
             <EmptyState
               icon={<Building2 className="h-5 w-5" />}
               title="No branches yet"
-              description="Branches are where expenses get recorded. Add your first."
+              description={
+                canManage
+                  ? 'Branches are where expenses get recorded. Add your first.'
+                  : 'No branches set up. Ask your Admin to add the first one.'
+              }
               action={
-                <Button onClick={() => setEditing('new')}>
-                  <Plus className="h-4 w-4" /> Add branch
-                </Button>
+                canManage ? (
+                  <Button onClick={() => setEditing('new')}>
+                    <Plus className="h-4 w-4" /> Add branch
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
@@ -103,24 +116,26 @@ export default function BranchesPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditing(b)}
-                            aria-label="Edit branch"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleting(b)}
-                            aria-label="Delete branch"
-                          >
-                            <Trash2 className="h-4 w-4 text-rose-600" />
-                          </Button>
-                        </div>
+                        {canManage && (
+                          <div className="flex items-center gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditing(b)}
+                              aria-label="Edit branch"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleting(b)}
+                              aria-label="Delete branch"
+                            >
+                              <Trash2 className="h-4 w-4 text-rose-600" />
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
