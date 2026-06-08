@@ -2,38 +2,51 @@ import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Building2,
+  FolderTree,
+  KeyRound,
   LayoutDashboard,
   LogOut,
+  Map,
   Menu,
   Receipt,
   ScrollText,
-  Sparkles,
   Tag,
   Users,
-  Wallet,
   X,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useTenantLogout, useTenantMe } from '../../hooks/useTenantAuth';
 import { cn } from '../../lib/utils';
+import { hasPermission, type Permission } from '../../lib/permissions';
+import type { TenantUser } from '../../lib/types';
 
 interface NavItem {
   to: string;
   label: string;
   icon: ReactNode;
-  disabled?: boolean;
+  permission?: Permission;
 }
 
-const NAV: NavItem[] = [
+const PRIMARY_NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-  { to: '/expenses', label: 'Expenses', icon: <Receipt className="h-4 w-4" />, disabled: true },
-  { to: '/promotions', label: 'Promotions', icon: <Sparkles className="h-4 w-4" />, disabled: true },
-  { to: '/branches', label: 'Branches', icon: <Building2 className="h-4 w-4" />, disabled: true },
-  { to: '/users', label: 'Users', icon: <Users className="h-4 w-4" />, disabled: true },
-  { to: '/tags', label: 'Tags', icon: <Tag className="h-4 w-4" />, disabled: true },
-  { to: '/billing', label: 'Billing', icon: <Wallet className="h-4 w-4" />, disabled: true },
-  { to: '/audit', label: 'Audit', icon: <ScrollText className="h-4 w-4" />, disabled: true },
+  { to: '/expenses', label: 'Expenses', icon: <Receipt className="h-4 w-4" />, permission: 'expenses:read' },
+  { to: '/branches', label: 'Branches', icon: <Building2 className="h-4 w-4" />, permission: 'branches:read' },
+  { to: '/regions', label: 'Regions', icon: <Map className="h-4 w-4" />, permission: 'branches:read' },
+  { to: '/expense-categories', label: 'Categories', icon: <FolderTree className="h-4 w-4" />, permission: 'expense-categories:manage' },
+  { to: '/tags', label: 'Tags', icon: <Tag className="h-4 w-4" />, permission: 'tags:manage' },
+  { to: '/users', label: 'Users', icon: <Users className="h-4 w-4" />, permission: 'users:read' },
 ];
+
+const SECONDARY_NAV: NavItem[] = [
+  { to: '/audit', label: 'Audit', icon: <ScrollText className="h-4 w-4" />, permission: 'audit:read' },
+  { to: '/change-password', label: 'Change password', icon: <KeyRound className="h-4 w-4" /> },
+];
+
+function isVisible(item: NavItem, role: TenantUser['role'] | undefined): boolean {
+  if (!item.permission) return true;
+  if (!role) return false;
+  return hasPermission(role, item.permission);
+}
 
 export function TenantLayout() {
   const me = useTenantMe();
@@ -50,6 +63,9 @@ export function TenantLayout() {
   };
 
   const user = me.data?.user;
+  const role = user?.role;
+  const primary = PRIMARY_NAV.filter((i) => isVisible(i, role));
+  const secondary = SECONDARY_NAV.filter((i) => isVisible(i, role));
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-surface-alt">
@@ -77,29 +93,13 @@ export function TenantLayout() {
           <Receipt className="h-5 w-5 text-brand-400" />
           <div>
             <div className="font-semibold text-white">EMS</div>
-            <div className="text-xs text-slate-400 -mt-0.5">
-              {user?.role ?? '—'}
-            </div>
+            <div className="text-xs text-slate-400 -mt-0.5">{user?.role ?? '—'}</div>
           </div>
         </div>
 
-        <nav className="p-3 space-y-1 flex-1">
-          {NAV.map((item) =>
-            item.disabled ? (
-              <span
-                key={item.to}
-                className="flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm text-slate-500 cursor-not-allowed"
-                title="Coming soon"
-              >
-                <span className="flex items-center gap-3">
-                  {item.icon}
-                  <span>{item.label}</span>
-                </span>
-                <span className="text-[10px] uppercase tracking-wide text-slate-600 border border-slate-700/60 rounded-full px-1.5 py-0.5">
-                  soon
-                </span>
-              </span>
-            ) : (
+        <nav className="p-3 flex-1 overflow-y-auto">
+          <div className="space-y-1">
+            {primary.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -117,7 +117,34 @@ export function TenantLayout() {
                 {item.icon}
                 <span>{item.label}</span>
               </NavLink>
-            ),
+            ))}
+          </div>
+          {secondary.length > 0 && (
+            <>
+              <div className="mt-6 mb-2 px-3 text-[10px] uppercase tracking-wider text-slate-500">
+                Account
+              </div>
+              <div className="space-y-1">
+                {secondary.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition',
+                        isActive
+                          ? 'bg-sidebar-active text-white'
+                          : 'text-slate-300 hover:bg-sidebar-hover hover:text-white',
+                      )
+                    }
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </>
           )}
         </nav>
 

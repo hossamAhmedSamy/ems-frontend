@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Receipt } from 'lucide-react';
@@ -10,9 +10,36 @@ import { useTenantLogin, useTenantMe } from '../../hooks/useTenantAuth';
 import { ApiError } from '../../lib/api';
 
 interface FormValues {
-  companySlug: string;
-  username: string;
+  identifier: string;
   password: string;
+}
+
+interface ParsedIdentifier {
+  username: string;
+  companySlug: string;
+}
+
+const IDENTIFIER_RX = /^([a-zA-Z0-9._-]+)@([a-z0-9-]+)$/;
+
+function parseIdentifier(input: string): ParsedIdentifier | { error: string } {
+  const trimmed = input.trim();
+  if (!trimmed.includes('@')) {
+    return { error: 'Enter your sign-in as username@your-company' };
+  }
+  // Loud catch: someone pasting a real email like john@acme.com / john@acme.co.uk
+  // The slug part should never have a dot. Pinpoint this exact mistake.
+  const afterAt = trimmed.split('@').slice(1).join('@');
+  if (afterAt.includes('.')) {
+    return {
+      error:
+        'This is your workspace login, not an email. Use the form username@your-company (no dot after @).',
+    };
+  }
+  const m = IDENTIFIER_RX.exec(trimmed);
+  if (!m) {
+    return { error: 'Format must be username@company (lowercase company, letters/numbers/hyphens)' };
+  }
+  return { username: m[1], companySlug: m[2].toLowerCase() };
 }
 
 export default function TenantLoginPage() {
@@ -20,22 +47,45 @@ export default function TenantLoginPage() {
   const [params] = useSearchParams();
   const me = useTenantMe();
   const login = useTenantLogin();
+  const [identifier, setIdentifier] = useState(() => {
+    const slug = params.get('slug');
+    return slug ? `@${slug}` : '';
+  });
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    setValue,
   } = useForm<FormValues>({
-    defaultValues: { companySlug: params.get('slug') ?? '' },
+    defaultValues: { identifier, password: '' },
   });
+
+  // Keep the form's identifier in sync with the controlled input so we can show
+  // live parsing hints below the field without losing validation messages.
+  useEffect(() => {
+    setValue('identifier', identifier);
+  }, [identifier, setValue]);
 
   useEffect(() => {
     if (me.data?.user) navigate('/', { replace: true });
   }, [me.data, navigate]);
 
+  const parsed = useMemo(() => (identifier ? parseIdentifier(identifier) : null), [identifier]);
+  const previewSlug = parsed && 'companySlug' in parsed ? parsed.companySlug : null;
+
   const onSubmit = handleSubmit(async (values) => {
+    const result = parseIdentifier(values.identifier);
+    if ('error' in result) {
+      setError('identifier', { message: result.error });
+      return;
+    }
     try {
-      await login.mutateAsync(values);
+      await login.mutateAsync({
+        companySlug: result.companySlug,
+        username: result.username,
+        password: values.password,
+      });
       navigate('/', { replace: true });
     } catch (err) {
       setError('root', {
@@ -53,32 +103,31 @@ export default function TenantLoginPage() {
             <Receipt className="h-6 w-6 text-white" />
           </div>
           <CardTitle className="mt-4 text-xl">Sign in to EMS</CardTitle>
-          <CardDescription>Enter your company workspace to continue.</CardDescription>
+          <CardDescription>Use your <span className="font-mono">username@workspace</span> to sign in.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="companySlug">Company workspace</Label>
+              <Label htmlFor="identifier">Sign-in</Label>
               <Input
-                id="companySlug"
-                autoComplete="organization"
-                autoFocus
-                placeholder="acme"
-                {...register('companySlug', { required: 'Company slug is required' })}
-              />
-              {errors.companySlug && (
-                <p className="text-xs text-rose-600">{errors.companySlug.message}</p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
+                id="identifier"
                 autoComplete="username"
-                {...register('username', { required: 'Username is required' })}
+                autoFocus
+                placeholder="you@your-company"
+                inputMode="email"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                onBlur={register('identifier').onBlur}
+                name={register('identifier').name}
+                ref={register('identifier').ref}
               />
-              {errors.username && (
-                <p className="text-xs text-rose-600">{errors.username.message}</p>
+              {previewSlug && !errors.identifier && (
+                <p className="text-xs text-slate-500">
+                  Workspace: <span className="font-mono text-slate-700">{previewSlug}</span>
+                </p>
+              )}
+              {errors.identifier && (
+                <p className="text-xs text-rose-600">{errors.identifier.message}</p>
               )}
             </div>
             <div className="space-y-1.5">

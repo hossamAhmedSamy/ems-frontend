@@ -5,24 +5,34 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
+import { SelectField } from '../../components/ui/Select';
+import { Label } from '../../components/ui/Label';
 import { PageHeader } from '../../components/PageHeader';
 import { useAuditLogs } from '../../hooks/useAuditLogs';
 import { formatDateTime } from '../../lib/utils';
+
+type ActionFilter = '' | 'Create' | 'Update' | 'Delete';
 
 export default function AuditLogsPage() {
   const [params, setParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const companyId = params.get('companyId') ?? '';
   const entityName = params.get('entityName') ?? '';
+  const action = (params.get('action') ?? '') as ActionFilter;
+  const from = params.get('from') ?? '';
+  const to = params.get('to') ?? '';
 
   const audit = useAuditLogs({
     page,
     pageSize: 50,
     companyId: companyId || undefined,
     entityName: entityName || undefined,
+    action: action || undefined,
+    from: from ? new Date(from).toISOString() : undefined,
+    to: to ? new Date(to + 'T23:59:59.999Z').toISOString() : undefined,
   });
 
-  const updateFilter = (key: 'companyId' | 'entityName', value: string) => {
+  const update = (key: string, value: string) => {
     setPage(1);
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
@@ -34,26 +44,63 @@ export default function AuditLogsPage() {
     <div>
       <PageHeader
         title="Audit logs"
-        description="Append-only event stream across every tenant. Filter by company id or entity name."
+        description="Append-only event stream across every tenant."
       />
 
       <div className="px-4 md:px-8 py-6 space-y-4 max-w-7xl mx-auto w-full">
         <Card className="p-4">
-          <div className="grid md:grid-cols-2 gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <Label className="text-xs">Company id</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="co_…"
+                  value={companyId}
+                  onChange={(e) => update('companyId', e.target.value)}
+                  className="pl-9 font-mono text-xs"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Entity</Label>
               <Input
-                placeholder="Filter by company id (e.g. co_…)"
-                value={companyId}
-                onChange={(e) => updateFilter('companyId', e.target.value)}
-                className="pl-9 font-mono text-xs"
+                placeholder="expense, branch, user, …"
+                value={entityName}
+                onChange={(e) => update('entityName', e.target.value)}
               />
             </div>
-            <Input
-              placeholder="Filter by entity (e.g. expense, branch, company)"
-              value={entityName}
-              onChange={(e) => updateFilter('entityName', e.target.value)}
-            />
+            <div>
+              <Label className="text-xs">Action</Label>
+              <SelectField
+                value={action || 'all'}
+                onValueChange={(v) => update('action', v === 'all' ? '' : v)}
+                options={[
+                  { value: 'all', label: 'Any action' },
+                  { value: 'Create', label: 'Create' },
+                  { value: 'Update', label: 'Update' },
+                  { value: 'Delete', label: 'Delete' },
+                ]}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">From</Label>
+                <Input
+                  type="date"
+                  value={from}
+                  onChange={(e) => update('from', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">To</Label>
+                <Input
+                  type="date"
+                  value={to}
+                  onChange={(e) => update('to', e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </Card>
 

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Building2,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,6 +24,7 @@ const NAV: NavItem[] = [
   { to: '/super-admin', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   { to: '/super-admin/companies', label: 'Companies', icon: <Building2 className="h-4 w-4" /> },
   { to: '/super-admin/audit', label: 'Audit logs', icon: <ScrollText className="h-4 w-4" /> },
+  { to: '/super-admin/change-password', label: 'Change password', icon: <KeyRound className="h-4 w-4" /> },
 ];
 
 export function SuperAdminLayout() {

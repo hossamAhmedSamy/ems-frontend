@@ -62,6 +62,30 @@ export interface CompanyDetail {
   users: TenantUser[];
 }
 
+export interface Branch {
+  id: string;
+  companyId: string;
+  regionId: string | null;
+  name: string;
+  code: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface Region {
+  id: string;
+  companyId: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuditLog {
   id: number;
   companyId: string;
