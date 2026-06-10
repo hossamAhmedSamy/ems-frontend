@@ -36,7 +36,7 @@ export default function CategoriesPage() {
   const cats = useCategories();
   const me = useTenantMe();
   const role = me.data?.user?.role;
-  const canManage = role ? hasPermission(role, 'expense-categories:manage') : false;
+  const canManage = role ? hasPermission(role, 'expense-categories:manage') : me.isLoading;
   const [editing, setEditing] = useState<ExpenseCategory | 'new' | null>(null);
   const [deleting, setDeleting] = useState<ExpenseCategory | null>(null);
   const deleteCat = useDeleteCategory();
@@ -134,7 +134,9 @@ export default function CategoriesPage() {
         </Card>
       </div>
 
-      <CategoryFormModal editing={editing} onClose={() => setEditing(null)} />
+      {editing !== null && (
+        <CategoryFormModal editing={editing} onClose={() => setEditing(null)} />
+      )}
 
       <ConfirmDialog
         open={!!deleting}
@@ -162,10 +164,9 @@ function CategoryFormModal({
   editing,
   onClose,
 }: {
-  editing: ExpenseCategory | 'new' | null;
+  editing: ExpenseCategory | 'new';
   onClose: () => void;
 }) {
-  const isOpen = editing !== null;
   const isNew = editing === 'new';
   const cat = editing === 'new' ? null : editing;
   const create = useCreateCategory();
@@ -179,7 +180,7 @@ function CategoryFormModal({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: cat
+    defaultValues: cat
       ? { name: cat.name, description: cat.description ?? '', sortOrder: cat.sortOrder }
       : { name: '', description: '', sortOrder: 0 },
   });
@@ -202,7 +203,7 @@ function CategoryFormModal({
 
   return (
     <Modal
-      open={isOpen}
+      open
       onOpenChange={(o) => {
         if (!o) {
           reset();

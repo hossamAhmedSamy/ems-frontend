@@ -226,7 +226,9 @@ export default function ExpensesPage() {
         </Card>
       </div>
 
-      <ExpenseFormModal editing={editing} onClose={() => setEditing(null)} />
+      {editing !== null && (
+        <ExpenseFormModal editing={editing} onClose={() => setEditing(null)} />
+      )}
 
       <ConfirmDialog
         open={!!deleting}
@@ -270,10 +272,9 @@ function ExpenseFormModal({
   editing,
   onClose,
 }: {
-  editing: Expense | 'new' | null;
+  editing: Expense | 'new';
   onClose: () => void;
 }) {
-  const isOpen = editing !== null;
   const isNew = editing === 'new';
   const expense = editing === 'new' ? null : editing;
   const branches = useBranches();
@@ -291,7 +292,7 @@ function ExpenseFormModal({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: expense
+    defaultValues: expense
       ? {
           branchId: expense.branchId,
           categoryId: expense.categoryId,
@@ -337,7 +338,7 @@ function ExpenseFormModal({
 
   return (
     <Modal
-      open={isOpen}
+      open
       onOpenChange={(o) => {
         if (!o) {
           reset();

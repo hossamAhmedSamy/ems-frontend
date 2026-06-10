@@ -155,8 +155,12 @@ export default function UsersPage() {
         </Card>
       </div>
 
-      <UserFormModal editing={editing} onClose={() => setEditing(null)} />
-      <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} />
+      {editing !== null && (
+        <UserFormModal editing={editing} onClose={() => setEditing(null)} />
+      )}
+      {resetting !== null && (
+        <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} />
+      )}
     </div>
   );
 }
@@ -185,10 +189,9 @@ function UserFormModal({
   editing,
   onClose,
 }: {
-  editing: TenantUserDetail | 'new' | null;
+  editing: TenantUserDetail | 'new';
   onClose: () => void;
 }) {
-  const isOpen = editing !== null;
   const isNew = editing === 'new';
   const user = editing === 'new' ? null : editing;
   const create = useCreateTenantUser();
@@ -287,7 +290,7 @@ function UserFormModal({
 
   return (
     <Modal
-      open={isOpen}
+      open
       onOpenChange={(o) => {
         if (!o) {
           createForm.reset();
@@ -442,7 +445,7 @@ function ResetPasswordModal({
   user,
   onClose,
 }: {
-  user: TenantUserDetail | null;
+  user: TenantUserDetail;
   onClose: () => void;
 }) {
   const reset = useResetUserPassword(user?.id ?? '');
@@ -466,7 +469,7 @@ function ResetPasswordModal({
 
   return (
     <Modal
-      open={!!user}
+      open
       onOpenChange={(o) => {
         if (!o) {
           resetForm();

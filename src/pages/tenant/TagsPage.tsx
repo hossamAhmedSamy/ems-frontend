@@ -40,7 +40,7 @@ export default function TagsPage() {
   const tags = useTags();
   const me = useTenantMe();
   const role = me.data?.user?.role;
-  const canManage = role ? hasPermission(role, 'tags:manage') : false;
+  const canManage = role ? hasPermission(role, 'tags:manage') : me.isLoading;
   const [editing, setEditing] = useState<Tag | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Tag | null>(null);
   const deleteTag = useDeleteTag();
@@ -125,7 +125,9 @@ export default function TagsPage() {
         </Card>
       </div>
 
-      <TagFormModal editing={editing} onClose={() => setEditing(null)} />
+      {editing !== null && (
+        <TagFormModal editing={editing} onClose={() => setEditing(null)} />
+      )}
 
       <ConfirmDialog
         open={!!deleting}
@@ -153,10 +155,9 @@ function TagFormModal({
   editing,
   onClose,
 }: {
-  editing: Tag | 'new' | null;
+  editing: Tag | 'new';
   onClose: () => void;
 }) {
-  const isOpen = editing !== null;
   const isNew = editing === 'new';
   const tag = editing === 'new' ? null : editing;
   const create = useCreateTag();
@@ -172,7 +173,7 @@ function TagFormModal({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: tag ? { name: tag.name, color: tag.color ?? '' } : { name: '', color: '#4F46E5' },
+    defaultValues: tag ? { name: tag.name, color: tag.color ?? '' } : { name: '', color: '#4F46E5' },
   });
 
   // Controlled color: two inputs (picker + text) bound to ONE source of truth
@@ -195,7 +196,7 @@ function TagFormModal({
 
   return (
     <Modal
-      open={isOpen}
+      open
       onOpenChange={(o) => {
         if (!o) {
           reset();

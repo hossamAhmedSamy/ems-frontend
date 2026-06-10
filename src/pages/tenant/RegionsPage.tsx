@@ -37,7 +37,8 @@ export default function RegionsPage() {
   const regions = useRegions();
   const me = useTenantMe();
   const role = me.data?.user?.role;
-  const canManage = role ? hasPermission(role, 'regions:manage') : false;
+  // Default-true while loading so cold-start doesn't hide buttons.
+  const canManage = role ? hasPermission(role, 'regions:manage') : me.isLoading;
   const [editing, setEditing] = useState<Region | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Region | null>(null);
   const deleteRegion = useDeleteRegion();
@@ -136,10 +137,9 @@ export default function RegionsPage() {
         </Card>
       </div>
 
-      <RegionFormModal
-        editing={editing}
-        onClose={() => setEditing(null)}
-      />
+      {editing !== null && (
+        <RegionFormModal editing={editing} onClose={() => setEditing(null)} />
+      )}
 
       <ConfirmDialog
         open={!!deleting}
@@ -168,10 +168,9 @@ function RegionFormModal({
   editing,
   onClose,
 }: {
-  editing: Region | 'new' | null;
+  editing: Region | 'new';
   onClose: () => void;
 }) {
-  const isOpen = editing !== null;
   const isNew = editing === 'new';
   const region = editing === 'new' ? null : editing;
   const createRegion = useCreateRegion();
@@ -185,7 +184,7 @@ function RegionFormModal({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: region
+    defaultValues: region
       ? {
           name: region.name,
           code: region.code ?? '',
@@ -214,7 +213,7 @@ function RegionFormModal({
 
   return (
     <Modal
-      open={isOpen}
+      open
       onOpenChange={(o) => {
         if (!o) {
           reset();

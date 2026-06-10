@@ -39,7 +39,11 @@ export default function BranchesPage() {
   const regions = useRegions();
   const me = useTenantMe();
   const role = me.data?.user?.role;
-  const canManage = role ? hasPermission(role, 'branches:manage') : false;
+  // While me.isLoading the role is undefined — DON'T treat that as "no
+  // permission" or we hide all the edit/delete buttons during cold-start
+  // and the user thinks they're broken. Default to showing them and let the
+  // server be the source of truth on actual submit.
+  const canManage = role ? hasPermission(role, 'branches:manage') : me.isLoading;
   const [editing, setEditing] = useState<Branch | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Branch | null>(null);
   const deleteBranch = useDeleteBranch();
@@ -146,7 +150,9 @@ export default function BranchesPage() {
         </Card>
       </div>
 
-      <BranchFormModal editing={editing} onClose={() => setEditing(null)} />
+      {editing !== null && (
+        <BranchFormModal editing={editing} onClose={() => setEditing(null)} />
+      )}
 
       <ConfirmDialog
         open={!!deleting}
@@ -170,14 +176,16 @@ export default function BranchesPage() {
   );
 }
 
+// The parent gates rendering on `editing !== null`, so this modal mounts
+// fresh every open and unmounts on close. useForm's defaultValues then run
+// each time — no stale state, no `values` re-sync edge cases.
 function BranchFormModal({
   editing,
   onClose,
 }: {
-  editing: Branch | 'new' | null;
+  editing: Branch | 'new';
   onClose: () => void;
 }) {
-  const isOpen = editing !== null;
   const isNew = editing === 'new';
   const branch = editing === 'new' ? null : editing;
   const createBranch = useCreateBranch();
@@ -194,7 +202,7 @@ function BranchFormModal({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: branch
+    defaultValues: branch
       ? { name: branch.name, code: branch.code ?? '', regionId: branch.regionId ?? '' }
       : { name: '', code: '', regionId: '' },
   });
@@ -223,7 +231,7 @@ function BranchFormModal({
 
   return (
     <Modal
-      open={isOpen}
+      open
       onOpenChange={(o) => {
         if (!o) {
           reset();
