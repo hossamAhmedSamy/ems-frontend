@@ -35,8 +35,8 @@ type FormValues = z.infer<typeof schema>;
 export default function CategoriesPage() {
   const cats = useCategories();
   const me = useTenantMe();
-  const role = me.data?.user?.role;
-  const canManage = role ? hasPermission(role, 'expense-categories:manage') : me.isLoading;
+  const user = me.data?.user;
+  const canManage = user ? hasPermission(user, 'expense-categories:manage') : me.isLoading;
   const [editing, setEditing] = useState<ExpenseCategory | 'new' | null>(null);
   const [deleting, setDeleting] = useState<ExpenseCategory | null>(null);
   const deleteCat = useDeleteCategory();

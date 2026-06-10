@@ -29,17 +29,9 @@ import {
   type TenantUserDetail,
 } from '../../hooks/useTenantUsers';
 import { useBranches } from '../../hooks/useTenantBranches';
+import { useRoles } from '../../hooks/useTenantRoles';
 import { useTenantMe } from '../../hooks/useTenantAuth';
 import { ApiError } from '../../lib/api';
-import type { TenantUser } from '../../lib/types';
-
-const ROLE_OPTIONS: { value: TenantUser['role']; label: string }[] = [
-  { value: 'Admin', label: 'Admin — full access' },
-  { value: 'CEO', label: 'CEO — full visibility, all branches' },
-  { value: 'BranchManager', label: 'Branch Manager — assigned branches only' },
-  { value: 'DataEntry', label: 'Data Entry — record expenses' },
-  { value: 'Finance', label: 'Finance — view + approve all branches' },
-];
 
 export default function UsersPage() {
   const users = useTenantUsers();
@@ -170,14 +162,14 @@ const createSchema = z.object({
   username: z.string().trim().min(3, 'Min 3 chars').max(80).regex(/^[a-zA-Z0-9._-]+$/, 'Letters, numbers, . _ -'),
   email: z.string().email().optional().or(z.literal('')),
   password: z.string().min(8, 'Min 8 chars').max(200),
-  role: z.enum(['Admin', 'CEO', 'BranchManager', 'DataEntry', 'Finance']),
+  roleId: z.string().min(1, 'Pick a role'),
   branchAssignments: z.array(z.string()).optional(),
 });
 
 const updateSchema = z.object({
   fullName: z.string().trim().min(1, 'Required').max(200),
   email: z.string().email().optional().or(z.literal('')),
-  role: z.enum(['Admin', 'CEO', 'BranchManager', 'DataEntry', 'Finance']),
+  roleId: z.string().min(1, 'Pick a role'),
   isActive: z.boolean(),
   branchAssignments: z.array(z.string()).optional(),
 });
@@ -198,10 +190,16 @@ function UserFormModal({
   const update = useUpdateTenantUser(user?.id ?? '');
   const setBranchAccess = useSetUserBranchAccess(user?.id ?? '');
   const branches = useBranches();
+  const roles = useRoles();
+
+  const roleOptions = (roles.data?.items ?? []).map((r) => ({
+    value: r.id,
+    label: r.description ? `${r.name} — ${r.description}` : r.name,
+  }));
 
   const createForm = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
-    defaultValues: { role: 'DataEntry', branchAssignments: [] },
+    defaultValues: { roleId: '', branchAssignments: [] },
   });
   const updateForm = useForm<UpdateForm>({
     resolver: zodResolver(updateSchema),
@@ -209,7 +207,7 @@ function UserFormModal({
       ? {
           fullName: user.fullName,
           email: user.email ?? '',
-          role: user.role,
+          roleId: user.roleId,
           isActive: user.isActive,
           branchAssignments: user.branchAssignments,
         }
@@ -219,12 +217,15 @@ function UserFormModal({
   // The two forms have different shapes — keep them entirely separate to avoid
   // type gymnastics. Pick reactive values from the active form via a small
   // adapter so the JSX below stays one tree.
-  const role = (isNew ? createForm.watch('role') : updateForm.watch('role')) as TenantUser['role'] | undefined;
+  const roleId = isNew ? createForm.watch('roleId') : updateForm.watch('roleId');
   const branchAssignments =
     (isNew
       ? createForm.watch('branchAssignments')
       : updateForm.watch('branchAssignments')) ?? [];
-  const branchScopeRelevant = role === 'BranchManager' || role === 'DataEntry';
+  // Branch scoping only matters for roles that can't see all branches anyway.
+  const selectedRole = roles.data?.items.find((r) => r.id === roleId);
+  const branchScopeRelevant =
+    !!selectedRole && !selectedRole.permissions.includes('branches:all-access');
 
   const toggleBranch = (id: string) => {
     const next = branchAssignments.includes(id)
@@ -234,9 +235,9 @@ function UserFormModal({
     else updateForm.setValue('branchAssignments', next);
   };
 
-  const setRole = (v: TenantUser['role']) => {
-    if (isNew) createForm.setValue('role', v);
-    else updateForm.setValue('role', v);
+  const setRoleId = (v: string) => {
+    if (isNew) createForm.setValue('roleId', v, { shouldValidate: true });
+    else updateForm.setValue('roleId', v, { shouldValidate: true });
   };
 
   const setRootError = (message: string) => {
@@ -257,7 +258,7 @@ function UserFormModal({
           username: values.username,
           email: values.email || null,
           password: values.password,
-          role: values.role,
+          roleId: values.roleId,
           branchAssignments: values.branchAssignments,
         });
         if (values.branchAssignments?.length) {
@@ -269,7 +270,7 @@ function UserFormModal({
         await update.mutateAsync({
           fullName: values.fullName,
           email: values.email || null,
-          role: values.role,
+          roleId: values.roleId,
           isActive: values.isActive,
         });
         const before = new Set(user.branchAssignments);
@@ -359,10 +360,16 @@ function UserFormModal({
           <div className="space-y-1.5">
             <Label>Role</Label>
             <SelectField
-              value={role}
-              onValueChange={(v) => setRole(v as TenantUser['role'])}
-              options={ROLE_OPTIONS}
+              value={roleId || undefined}
+              onValueChange={setRoleId}
+              options={roleOptions}
+              placeholder={roles.isLoading ? 'Loading roles…' : 'Select a role'}
             />
+            {(isNew ? createForm.formState.errors.roleId : updateForm.formState.errors.roleId) && (
+              <p className="text-xs text-rose-600">
+                {String((isNew ? createForm : updateForm).formState.errors.roleId?.message)}
+              </p>
+            )}
           </div>
         </div>
         {isNew && (

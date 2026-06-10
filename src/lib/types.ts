@@ -45,7 +45,8 @@ export interface TenantUser {
   fullName: string;
   username: string;
   email: string | null;
-  role: 'CEO' | 'Admin' | 'BranchManager' | 'DataEntry' | 'Finance';
+  // Role name — can be a system role (CEO, Admin, …) or a custom one.
+  role: string;
   isActive: boolean;
   createdAt: string;
 }

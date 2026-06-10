@@ -15,6 +15,8 @@ import HandoffPage from './pages/tenant/HandoffPage';
 import BranchesPage from './pages/tenant/BranchesPage';
 import RegionsPage from './pages/tenant/RegionsPage';
 import UsersPage from './pages/tenant/UsersPage';
+import RolesPage from './pages/tenant/RolesPage';
+import AuditLogsPage from './pages/tenant/AuditLogsPage';
 import CategoriesPage from './pages/tenant/CategoriesPage';
 import TagsPage from './pages/tenant/TagsPage';
 import ExpensesPage from './pages/tenant/ExpensesPage';
@@ -42,6 +44,8 @@ export default function App() {
               <Route path="/expense-categories" element={<CategoriesPage />} />
               <Route path="/tags" element={<TagsPage />} />
               <Route path="/users" element={<UsersPage />} />
+              <Route path="/roles" element={<RolesPage />} />
+              <Route path="/audit" element={<AuditLogsPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
             </Route>
           </Route>

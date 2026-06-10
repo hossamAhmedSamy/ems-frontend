@@ -3,7 +3,13 @@ import { ApiError, api } from '../lib/api';
 import type { TenantUser } from '../lib/types';
 
 interface MeResponse {
-  user: TenantUser & { companyId: string; mustChangePassword: boolean; branchId: string | null };
+  user: TenantUser & {
+    companyId: string;
+    mustChangePassword: boolean;
+    branchId: string | null;
+    roleId: string;
+    permissions: string[];
+  };
 }
 
 export function useTenantMe() {

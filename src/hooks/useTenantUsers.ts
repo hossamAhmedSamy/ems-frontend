@@ -4,15 +4,17 @@ import type { TenantUser } from '../lib/types';
 
 export interface TenantUserDetail extends TenantUser {
   companyId: string;
+  roleId: string;
   branchId: string | null;
   mustChangePassword: boolean;
   branchAssignments: string[];
 }
 
-export function useTenantUsers() {
+export function useTenantUsers(enabled = true) {
   return useQuery({
     queryKey: ['tenant', 'users'],
     queryFn: () => api.get<{ items: TenantUserDetail[] }>('/users'),
+    enabled,
   });
 }
 
@@ -29,7 +31,7 @@ export interface CreateUserInput {
   username: string;
   email?: string | null;
   password: string;
-  role: TenantUser['role'];
+  roleId: string;
   branchId?: string | null;
   branchAssignments?: string[];
 }
@@ -48,7 +50,7 @@ export function useUpdateTenantUser(id: string) {
     mutationFn: (input: Partial<{
       fullName: string;
       email: string | null;
-      role: TenantUser['role'];
+      roleId: string;
       branchId: string | null;
       isActive: boolean;
     }>) => api.patch<TenantUserDetail>(`/users/${id}`, input),

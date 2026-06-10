@@ -39,8 +39,8 @@ type FormValues = z.infer<typeof schema>;
 export default function TagsPage() {
   const tags = useTags();
   const me = useTenantMe();
-  const role = me.data?.user?.role;
-  const canManage = role ? hasPermission(role, 'tags:manage') : me.isLoading;
+  const user = me.data?.user;
+  const canManage = user ? hasPermission(user, 'tags:manage') : me.isLoading;
   const [editing, setEditing] = useState<Tag | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Tag | null>(null);
   const deleteTag = useDeleteTag();

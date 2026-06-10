@@ -10,6 +10,7 @@ import {
   Menu,
   Receipt,
   ScrollText,
+  ShieldCheck,
   Tag,
   Users,
   X,
@@ -17,8 +18,7 @@ import {
 import { Button } from '../ui/Button';
 import { useTenantLogout, useTenantMe } from '../../hooks/useTenantAuth';
 import { cn } from '../../lib/utils';
-import { hasPermission, type Permission } from '../../lib/permissions';
-import type { TenantUser } from '../../lib/types';
+import { hasPermission, type Permission, type PermissionHolder } from '../../lib/permissions';
 
 interface NavItem {
   to: string;
@@ -35,6 +35,7 @@ const PRIMARY_NAV: NavItem[] = [
   { to: '/expense-categories', label: 'Categories', icon: <FolderTree className="h-4 w-4" />, permission: 'expense-categories:manage' },
   { to: '/tags', label: 'Tags', icon: <Tag className="h-4 w-4" />, permission: 'tags:manage' },
   { to: '/users', label: 'Users', icon: <Users className="h-4 w-4" />, permission: 'users:read' },
+  { to: '/roles', label: 'Roles', icon: <ShieldCheck className="h-4 w-4" />, permission: 'roles:manage' },
 ];
 
 const SECONDARY_NAV: NavItem[] = [
@@ -42,10 +43,10 @@ const SECONDARY_NAV: NavItem[] = [
   { to: '/change-password', label: 'Change password', icon: <KeyRound className="h-4 w-4" /> },
 ];
 
-function isVisible(item: NavItem, role: TenantUser['role'] | undefined): boolean {
+function isVisible(item: NavItem, user: PermissionHolder | undefined): boolean {
   if (!item.permission) return true;
-  if (!role) return false;
-  return hasPermission(role, item.permission);
+  if (!user) return false;
+  return hasPermission(user, item.permission);
 }
 
 export function TenantLayout() {
@@ -63,9 +64,8 @@ export function TenantLayout() {
   };
 
   const user = me.data?.user;
-  const role = user?.role;
-  const primary = PRIMARY_NAV.filter((i) => isVisible(i, role));
-  const secondary = SECONDARY_NAV.filter((i) => isVisible(i, role));
+  const primary = PRIMARY_NAV.filter((i) => isVisible(i, user));
+  const secondary = SECONDARY_NAV.filter((i) => isVisible(i, user));
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-surface-alt">

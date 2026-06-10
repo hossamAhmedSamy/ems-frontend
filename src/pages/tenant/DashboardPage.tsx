@@ -22,7 +22,6 @@ import { useMemo } from 'react';
 export default function TenantDashboardPage() {
   const me = useTenantMe();
   const user = me.data?.user;
-  const role = user?.role;
   const branches = useBranches();
   const users = useTenantUsers();
   const cats = useCategories();
@@ -42,8 +41,8 @@ export default function TenantDashboardPage() {
       .reduce((s, e) => s + parseFloat(e.amount || '0'), 0);
   }, [recentItems]);
 
-  const canManageUsers = role ? hasPermission(role, 'users:manage') : false;
-  const canManageBranches = role ? hasPermission(role, 'branches:manage') : false;
+  const canManageUsers = hasPermission(user, 'users:manage');
+  const canManageBranches = hasPermission(user, 'branches:manage');
 
   const steps = [
     {

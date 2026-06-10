@@ -38,12 +38,12 @@ export default function BranchesPage() {
   const branches = useBranches();
   const regions = useRegions();
   const me = useTenantMe();
-  const role = me.data?.user?.role;
-  // While me.isLoading the role is undefined — DON'T treat that as "no
+  const user = me.data?.user;
+  // While me.isLoading the user is undefined — DON'T treat that as "no
   // permission" or we hide all the edit/delete buttons during cold-start
   // and the user thinks they're broken. Default to showing them and let the
   // server be the source of truth on actual submit.
-  const canManage = role ? hasPermission(role, 'branches:manage') : me.isLoading;
+  const canManage = user ? hasPermission(user, 'branches:manage') : me.isLoading;
   const [editing, setEditing] = useState<Branch | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Branch | null>(null);
   const deleteBranch = useDeleteBranch();

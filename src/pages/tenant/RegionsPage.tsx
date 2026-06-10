@@ -36,9 +36,9 @@ type FormValues = z.infer<typeof schema>;
 export default function RegionsPage() {
   const regions = useRegions();
   const me = useTenantMe();
-  const role = me.data?.user?.role;
+  const user = me.data?.user;
   // Default-true while loading so cold-start doesn't hide buttons.
-  const canManage = role ? hasPermission(role, 'regions:manage') : me.isLoading;
+  const canManage = user ? hasPermission(user, 'regions:manage') : me.isLoading;
   const [editing, setEditing] = useState<Region | 'new' | null>(null);
   const [deleting, setDeleting] = useState<Region | null>(null);
   const deleteRegion = useDeleteRegion();

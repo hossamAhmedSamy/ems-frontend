@@ -11,3 +11,5 @@ dist/
 .coverage/
 coverage/
 *.tsbuildinfo
+vite.config.js
+vite.config.d.ts
