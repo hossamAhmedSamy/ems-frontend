@@ -26,11 +26,11 @@ export function Modal({ open, onOpenChange, title, description, children, footer
         <Dialog.Overlay className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=open]:fade-in" />
         <Dialog.Content
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white shadow-elevated focus:outline-none data-[state=open]:animate-in data-[state=open]:zoom-in-95',
+            'fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-slate-200 bg-white shadow-elevated focus:outline-none data-[state=open]:animate-in data-[state=open]:zoom-in-95',
             sizeClass[size],
           )}
         >
-          <div className="flex items-start justify-between p-5 pb-3">
+          <div className="flex shrink-0 items-start justify-between p-5 pb-3">
             <div>
               <Dialog.Title className="text-lg font-semibold text-slate-900">{title}</Dialog.Title>
               {description && (
@@ -44,9 +44,9 @@ export function Modal({ open, onOpenChange, title, description, children, footer
               <span className="sr-only">Close</span>
             </Dialog.Close>
           </div>
-          <div className="px-5 pb-5">{children}</div>
+          <div className="overflow-y-auto px-5 pb-5">{children}</div>
           {footer && (
-            <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-4 bg-surface-alt rounded-b-xl">
+            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-100 p-4 bg-surface-alt rounded-b-xl">
               {footer}
             </div>
           )}
