@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { Assistant } from './assistant/Assistant';
 import { useTenantLogout, useTenantMe } from '../../hooks/useTenantAuth';
 import { cn } from '../../lib/utils';
 import { hasPermission, type Permission, type PermissionHolder } from '../../lib/permissions';
@@ -170,6 +171,8 @@ export function TenantLayout() {
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
+
+      <Assistant />
     </div>
   );
 }

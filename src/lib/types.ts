@@ -102,6 +102,29 @@ export interface AuditLog {
   performedAt: string;
 }
 
+export interface AssistantMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface AssistantPendingAction {
+  tool: string;
+  input: Record<string, unknown>;
+  summary: string;
+}
+
+export interface AssistantChatResponse {
+  reply: string;
+  toolEvents: { tool: string; ok: boolean }[];
+  pendingAction: AssistantPendingAction | null;
+}
+
+export interface AiUsage {
+  tier: string;
+  day: string;
+  features: { feature: string; used: number; limit: number }[];
+}
+
 export interface Paginated<T> {
   items: T[];
   page: number;
