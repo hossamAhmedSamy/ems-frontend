@@ -144,8 +144,10 @@ export default function AuditLogsPage() {
                     <td className="px-4 py-3 hidden md:table-cell font-mono text-xs text-slate-500 truncate max-w-[14rem]">
                       {a.companyId}
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell font-mono text-xs text-slate-500 truncate max-w-[12rem]">
-                      {a.performedBy ?? '—'}
+                    <td className="px-4 py-3 hidden lg:table-cell text-xs text-slate-600 truncate max-w-[12rem]">
+                      {a.performerName ?? (
+                        <span className="font-mono text-slate-500">{a.performedBy ?? '—'}</span>
+                      )}
                     </td>
                   </tr>
                 ))}

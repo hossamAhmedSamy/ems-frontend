@@ -97,6 +97,7 @@ export interface AuditLog {
   newValues: string | null;
   changedFields: string | null;
   performedBy: string | null;
+  performerName: string | null;
   ipAddress: string | null;
   performedAt: string;
 }
