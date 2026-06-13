@@ -18,6 +18,12 @@ import type {
 const TRANSCRIPT_KEY = 'ems-assistant-transcript';
 const MAX_MESSAGES = 20;
 
+// Called at auth boundaries so one company's conversation never carries over
+// into the next login.
+export function clearAssistantTranscript(): void {
+  sessionStorage.removeItem(TRANSCRIPT_KEY);
+}
+
 export const WELCOME_LINES = [
   'Hi! Ask me about your expenses, or tell me to add one.',
   'Hello — try “what did we spend this month?”',
